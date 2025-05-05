@@ -25,7 +25,7 @@ export function Header({ onUploadComplete, showUploadButton, isAdmin, adminAvata
     <header className="sticky top-0 z-20 bg-white border-b shadow-sm py-4">
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          {isAdmin && adminAvatarUrl ? (
+          {isAdmin ? (
             <div className="flex items-center space-x-2">
               <img src={adminAvatarUrl} alt="Admin Avatar" className="h-8 w-8 rounded-full border border-gray-300" />
             </div>

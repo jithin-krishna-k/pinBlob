@@ -136,7 +136,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onUploadComplete={handleRefresh} showUploadButton={isAdmin} isAdmin={true}
+      <Header onUploadComplete={handleRefresh} showUploadButton={isAdmin} isAdmin={isAdmin}
         adminAvatarUrl="https://img.freepik.com/free-psd/3d-illustration-human-avatar-profile_23-2150671142.jpg?t=st=1746470312~exp=1746473912~hmac=ac808727f3093dd34447ff5ace090df2ed8ecf765d773bfcf08ecb8e093647ae&w=740" />
       <main className="container mx-auto px-4 py-8">
         {loading ? (
