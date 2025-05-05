@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "A Pinterest-style image gallery using Vercel Blob Storage",
   generator: 'v0.dev',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/push-pin.svg',
   },
 }
 
