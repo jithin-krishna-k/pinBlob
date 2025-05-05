@@ -1,0 +1,78 @@
+import { NextResponse } from "next/server"
+import { list } from "@vercel/blob"
+
+export async function GET() {
+  try {
+    // Check if the token exists
+    const rawToken = process.env.BLOB_READ_WRITE_TOKEN
+
+    if (!rawToken) {
+      return NextResponse.json({
+        success: false,
+        error: "BLOB_READ_WRITE_TOKEN is not defined",
+        tokenExists: false,
+        environment: process.env.NODE_ENV || "unknown",
+      })
+    }
+
+    // Remove quotes if they exist
+    const token = rawToken.replace(/^["']|["']$/g, "")
+
+    // Check if the token had quotes
+    const hadQuotes = token !== rawToken
+
+    // Analyze the token format
+    const tokenParts = token.split("_")
+    let tokenInfo = {
+      format: "unknown",
+      type: "unknown",
+      storeId: "unknown",
+      length: token.length,
+      firstChars: token.substring(0, 10) + "...",
+      lastChars: "..." + token.substring(token.length - 5),
+      hadQuotes,
+    }
+
+    if (tokenParts.length >= 4) {
+      tokenInfo = {
+        ...tokenInfo,
+        format: `${tokenParts[0]}_${tokenParts[1]}`,
+        type: tokenParts[2],
+        storeId: tokenParts[3],
+      }
+    }
+
+    // Test the token with the SDK
+    try {
+      const { blobs } = await list({ token })
+
+      return NextResponse.json({
+        success: true,
+        tokenExists: true,
+        tokenInfo,
+        environment: process.env.NODE_ENV || "unknown",
+        verified: true,
+        blobCount: blobs.length,
+      })
+    } catch (error) {
+      return NextResponse.json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to verify token",
+        tokenExists: true,
+        tokenInfo,
+        environment: process.env.NODE_ENV || "unknown",
+        verified: false,
+      })
+    }
+  } catch (error) {
+    console.error("Error checking token:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to check token",
+        environment: process.env.NODE_ENV || "unknown",
+      },
+      { status: 500 },
+    )
+  }
+}
