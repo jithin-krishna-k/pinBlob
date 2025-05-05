@@ -26,25 +26,32 @@ export function Header({ onUploadComplete, showUploadButton, isAdmin, adminAvata
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {isAdmin ? (
-            <div className="flex items-center space-x-2">
-              <img src={adminAvatarUrl} alt="Admin Avatar" className="h-8 w-8 rounded-full border border-gray-300" />
-            </div>
-          ) : <ImageIcon className="h-6 w-6 text-primary" />}
-
+            <img
+              src={adminAvatarUrl}
+              alt="Admin Avatar"
+              className="h-8 w-8 rounded-full border border-gray-300"
+            />
+          ) : (
+            <ImageIcon className="h-6 w-6 text-primary" />
+          )}
           <h1 className="text-xl font-bold">PinBlob</h1>
         </div>
 
-        {showUploadButton && <Button onClick={() => setIsUploadOpen(true)}>Upload Image</Button>}
-
-        <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Upload a new image</DialogTitle>
-            </DialogHeader>
-            <UploadImage onUploadComplete={handleUploadComplete} />
-          </DialogContent>
-        </Dialog>
+        {showUploadButton && (
+          <div className="flex items-center space-x-4">
+            <Button onClick={() => setIsUploadOpen(true)}>Upload Image</Button>
+            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upload a new image</DialogTitle>
+                </DialogHeader>
+                <UploadImage onUploadComplete={handleUploadComplete} />
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
+
     </header>
   )
 }
