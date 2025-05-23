@@ -148,14 +148,14 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
                     sizes="100vw"
                     className="w-full h-auto object-cover rounded-lg"
                   />
-                  {hoveredImage === image.pathname && (
+                  { (
                     <div className="absolute top-2 right-2 z-10">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           setOpenMenuImage((prev) => (prev === image.pathname ? null : image.pathname))
                         }}
-                        className="p-1 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-80"
+                        className="p-1 bg-black bg-opacity-50 rounded-full text-white "
                       >
                         &#x22EE; {/* Vertical Ellipsis */}
                       </button>
@@ -171,6 +171,41 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
                             }}
                           >
                             View
+                          </button>
+                          <button
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              try {
+                                const response = await fetch(image.url);
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+
+                                const link = document.createElement('a');
+                                link.href = url;
+                                const filename = image.url.split('/').pop() || 'default-image.jpg';
+                                link.download = filename;
+
+                                link.click();
+                                window.URL.revokeObjectURL(url);
+                              } catch (err: any) {
+                                alert('Error downloading image: ' + err.message);
+                              }
+                              setOpenMenuImage(null)
+                            }}
+                          >
+                            Download
+                          </button>
+                          <button
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigator.clipboard.writeText(image.url)
+                              setOpenMenuImage(null)
+                              alert("Image URL copied!")
+                            }}
+                          >
+                            Copy URL
                           </button>
                           {isAdmin && (
                             <button
@@ -217,7 +252,7 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
             <div className="absolute top-2 right-2 z-50" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(prev => !prev)}
-                className="p-2 rounded-full text-black hover:bg-gray-100"
+                className="p-2 rounded-full text-black bg-gray-100"
               >
                 <MoreVertical size={20} />
               </button>
