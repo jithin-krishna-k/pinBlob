@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Trash2, X } from "lucide-react"
+import { Trash2, X, MoreVertical } from "lucide-react"
 import type { BlobImage } from "@/lib/blob-service"
 import { log } from "node:console"
 
@@ -19,6 +19,40 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
   const [openMenuImage, setOpenMenuImage] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (selectedImage) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [selectedImage])
+
+  // Handle click outside for modal and dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close modal when clicking outside
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setSelectedImage(null)
+      }
+      
+      // Close dropdown when clicking outside
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   useEffect(() => {
     // Check if user is admin by checking the cookie
@@ -170,28 +204,29 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
 
       {/* Modal Popup */}
       {selectedImage && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center px-4">
-          <div className="relative bg-white rounded-lg overflow-hidden max-w-full w-[90vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-h-[90vh] shadow-xl">
-
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-2 right-2 z-50 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700"
-            >
-              ✕
-            </button>
-
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center px-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div 
+            ref={modalRef}
+            className="relative bg-white rounded-lg overflow-hidden max-w-full w-[90vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] max-h-[90vh] shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* 3-dot Menu */}
-            <div className="absolute  top-2 left-2 z-50">
+            <div className="absolute top-2 right-2 z-50" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(prev => !prev)}
-                className="p-2 rounded-full hover: bg-gray-700 text-white"
+                className="p-2 rounded-full text-black hover:bg-gray-100"
               >
-                ⋯
+                <MoreVertical size={20} />
               </button>
 
               {showDropdown && (
-                <div className="mt-2 bg-white shadow-md rounded-md py-1 text-sm absolute left-0 top-8 z-50 w-36">
+                <div 
+                  className="mt-2 bg-white shadow-md rounded-md py-1 text-sm absolute right-0 top-8 z-50 w-36"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     onClick={async () => {
