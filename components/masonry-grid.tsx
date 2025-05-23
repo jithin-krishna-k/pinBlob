@@ -18,6 +18,22 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
   const [selectedImage, setSelectedImage] = useState<BlobImage | null>(null)
   const [openMenuImage, setOpenMenuImage] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    // Check if user is admin by checking the cookie
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/check-admin')
+        const data = await response.json()
+        setIsAdmin(data.isAdmin)
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+        setIsAdmin(false)
+      }
+    }
+    checkAdminStatus()
+  }, [])
 
   useEffect(() => {
     const updateColumns = () => {
@@ -56,10 +72,18 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
         body: JSON.stringify({ pathname }),
       })
       const result = await response.json()
-      if (!result.success) throw new Error(result.error || "Failed to delete image")
+      if (!result.success) {
+        if (response.status === 401) {
+          alert("You must be logged in as an admin to delete images")
+        } else {
+          throw new Error(result.error || "Failed to delete image")
+        }
+        return
+      }
       onImageDeleted()
     } catch (error) {
       console.error("Error deleting image:", error)
+      alert("Failed to delete image. Please try again.")
     } finally {
       setIsDeleting(null)
     }
@@ -114,16 +138,18 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
                           >
                             View
                           </button>
-                          <button
-                            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenMenuImage(null)
-                              handleDelete(image.pathname)
-                            }}
-                          >
-                            Delete
-                          </button>
+                          {isAdmin && (
+                            <button
+                              className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenMenuImage(null)
+                                handleDelete(image.pathname)
+                              }}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -170,20 +196,18 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     onClick={async () => {
                       try {
-                        const response = await fetch(selectedImage.url);  // Fetch the image from the URL
-                        const blob = await response.blob();  // Convert the response to a Blob object
-                        const url = window.URL.createObjectURL(blob);  // Create a temporary URL for the Blob
+                        const response = await fetch(selectedImage.url);
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
 
-                        const link = document.createElement('a');  // Create an anchor element
-                        link.href = url;  // Set the href to the Blob URL
+                        const link = document.createElement('a');
+                        link.href = url;
 
-                        // Set the filename. If no filename is found, use a default one.
                         const filename = selectedImage.url.split('/').pop() || 'default-image.jpg';
-                        link.download = filename;  // Set the filename (from URL or default)
+                        link.download = filename;
 
                         link.click();
 
-                        // Clean up
                         window.URL.revokeObjectURL(url);
                       } catch (err: any) {
                         alert('Error downloading image: ' + err.message);
@@ -193,7 +217,6 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
                     Download Image
                   </button>
 
-                  {/* Copy URL */}
                   <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     onClick={() => {
@@ -205,35 +228,18 @@ export function MasonryGrid({ images, onImageDeleted }: MasonryGridProps) {
                     Copy URL
                   </button>
 
-                  {/* Share */}
-                  {/* <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={async () => {
-                      try {
-                        await navigator.share({
-                          title: "Check this image",
-                          url: selectedImage.url,
-                        })
-                      } catch (err) {
-                        alert("Sharing not supported or canceled.")
-                      }
-                      setShowDropdown(false)
-                    }}
-                  >
-                    Share
-                  </button> */}
-
-                  {/* Delete */}
-                  <button
-                    className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
-                    onClick={() => {
-                      setShowDropdown(false)
-                      handleDelete(selectedImage.pathname)
-                      setSelectedImage(null)
-                    }}
-                  >
-                    Delete
-                  </button>
+                  {isAdmin && (
+                    <button
+                      className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                      onClick={() => {
+                        setShowDropdown(false)
+                        handleDelete(selectedImage.pathname)
+                        setSelectedImage(null)
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               )}
             </div>
